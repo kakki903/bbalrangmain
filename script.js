@@ -19,10 +19,10 @@ function initializeTheme() {
 // 컨트롤 초기화
 function initializeControls() {
     const themeToggle = document.getElementById('theme-toggle');
-    const categoryFilter = document.getElementById('category-filter');
+    const clearFilters = document.getElementById('clear-filters');
     
     themeToggle.addEventListener('click', toggleTheme);
-    categoryFilter.addEventListener('change', filterByCategory);
+    clearFilters.addEventListener('click', clearAllFilters);
 }
 
 // 테마 토글 기능
@@ -70,39 +70,99 @@ async function loadSiteData() {
     }
 }
 
-// 카테고리 필터 옵션 생성
+// 카테고리 체크박스 생성
 function populateCategoryFilter(sites) {
-    const categoryFilter = document.getElementById('category-filter');
+    const checkboxContainer = document.getElementById('category-checkboxes');
     
     // 중복 제거 후 정렬된 카테고리 목록 생성
     const categories = [...new Set(sites.map(site => site.category))].sort();
     
-    // 기존 옵션들 제거 (전체 카테고리 옵션 제외)
-    while (categoryFilter.children.length > 1) {
-        categoryFilter.removeChild(categoryFilter.lastChild);
-    }
+    // 기존 체크박스들 제거
+    checkboxContainer.innerHTML = '';
     
-    // 새 카테고리 옵션들 추가
+    // 새 체크박스들 추가
     categories.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category;
-        option.textContent = category;
-        categoryFilter.appendChild(option);
+        const checkboxWrapper = document.createElement('div');
+        checkboxWrapper.className = 'category-checkbox';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `category-${category}`;
+        checkbox.value = category;
+        checkbox.addEventListener('change', filterByCategory);
+        
+        const label = document.createElement('label');
+        label.htmlFor = `category-${category}`;
+        label.textContent = category;
+        
+        checkboxWrapper.appendChild(checkbox);
+        checkboxWrapper.appendChild(label);
+        
+        // 체크박스 래퍼 클릭 시 체크박스 토글
+        checkboxWrapper.addEventListener('click', function(e) {
+            if (e.target !== checkbox) {
+                checkbox.checked = !checkbox.checked;
+                filterByCategory();
+            }
+            updateCheckboxStyle(checkboxWrapper, checkbox.checked);
+        });
+        
+        // 체크박스 직접 클릭 시에도 스타일 업데이트
+        checkbox.addEventListener('change', function() {
+            updateCheckboxStyle(checkboxWrapper, checkbox.checked);
+        });
+        
+        checkboxContainer.appendChild(checkboxWrapper);
     });
 }
 
-// 카테고리별 필터링
+// 체크박스 스타일 업데이트
+function updateCheckboxStyle(wrapper, isChecked) {
+    if (isChecked) {
+        wrapper.classList.add('selected');
+    } else {
+        wrapper.classList.remove('selected');
+    }
+}
+
+// 카테고리별 필터링 (다중 선택)
 function filterByCategory() {
-    const selectedCategory = document.getElementById('category-filter').value;
+    const checkboxes = document.querySelectorAll('#category-checkboxes input[type="checkbox"]');
+    const selectedCategories = [];
     
-    if (selectedCategory === '') {
-        // 전체 카테고리 선택 시 모든 사이트 표시
+    checkboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            selectedCategories.push(checkbox.value);
+        }
+    });
+    
+    if (selectedCategories.length === 0) {
+        // 선택된 카테고리가 없으면 모든 사이트 표시
         createCards(allSites);
     } else {
-        // 선택된 카테고리의 사이트만 필터링
-        const filteredSites = allSites.filter(site => site.category === selectedCategory);
+        // 선택된 카테고리들의 사이트만 필터링
+        const filteredSites = allSites.filter(site => 
+            selectedCategories.includes(site.category)
+        );
         createCards(filteredSites);
     }
+}
+
+// 모든 필터 해제
+function clearAllFilters() {
+    const checkboxes = document.querySelectorAll('#category-checkboxes input[type="checkbox"]');
+    const checkboxWrappers = document.querySelectorAll('.category-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    checkboxWrappers.forEach(wrapper => {
+        wrapper.classList.remove('selected');
+    });
+    
+    // 모든 사이트 표시
+    createCards(allSites);
 }
 
 // 카드들을 생성하는 함수
