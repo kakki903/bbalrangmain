@@ -30,10 +30,7 @@ function initializeTheme() {
 // 컨트롤 초기화
 function initializeControls() {
     const themeToggle = document.getElementById('theme-toggle');
-    const clearFilters = document.getElementById('clear-filters');
-    
     themeToggle.addEventListener('click', toggleTheme);
-    clearFilters.addEventListener('click', clearAllFilters);
 }
 
 // 테마 토글 기능
@@ -94,7 +91,7 @@ function populateCategoryFilter(sites) {
     // 새 태그들 추가
     categories.forEach(category => {
         const tag = document.createElement('div');
-        tag.className = 'category-tag';
+        tag.className = 'category-tag selected'; // 기본으로 선택된 상태
         tag.textContent = category;
         tag.dataset.category = category;
         
@@ -130,17 +127,7 @@ function filterByCategory() {
     }
 }
 
-// 모든 필터 해제
-function clearAllFilters() {
-    const tags = document.querySelectorAll('.category-tag');
-    
-    tags.forEach(tag => {
-        tag.classList.remove('selected');
-    });
-    
-    // 모든 사이트 표시
-    createCards(allSites);
-}
+
 
 // 카드들을 생성하는 함수
 function createCards(sites) {
