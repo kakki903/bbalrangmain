@@ -50,10 +50,16 @@ function createCard(site) {
     const card = document.createElement('div');
     card.className = 'card';
     
+    // 스크린샷 API를 사용한 미리보기 이미지 URL 생성
+    const screenshotUrl = `https://api.screenshotmachine.com?key=demo&url=${encodeURIComponent(site.url)}&dimension=1024x768`;
+    
     // 카드 HTML 구조 생성
     card.innerHTML = `
         <div class="card-image">
-            <img src="${site.image}" alt="${site.title}" onerror="this.style.display='none';">
+            <img src="${screenshotUrl}" alt="${site.title} 미리보기" onerror="this.src='${site.image}';">
+            <div class="preview-overlay">
+                <span>실시간 미리보기</span>
+            </div>
         </div>
         <div class="card-content">
             <h3 class="card-title">${site.title}</h3>
