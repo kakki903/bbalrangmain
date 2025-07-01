@@ -1,0 +1,35 @@
+
+[
+  {
+    "id": 1,
+    "title": "Google",
+    "description": "세계에서 가장 인기 있는 검색 엔진",
+    "url": "https://www.google.com",
+    "image": "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
+    "category": "검색"
+  },
+  {
+    "id": 2,
+    "title": "GitHub",
+    "description": "개발자를 위한 코드 저장소 및 협업 플랫폼",
+    "url": "https://github.com",
+    "image": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+    "category": "개발"
+  },
+  {
+    "id": 3,
+    "title": "YouTube",
+    "description": "전 세계 최대의 동영상 공유 플랫폼",
+    "url": "https://youtube.com",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg",
+    "category": "엔터테인먼트"
+  },
+  {
+    "id": 4,
+    "title": "Stack Overflow",
+    "description": "개발자들의 질문과 답변 커뮤니티",
+    "url": "https://stackoverflow.com",
+    "image": "https://cdn.sstatic.net/Sites/stackoverflow/Img/apple-touch-icon.png",
+    "category": "개발"
+  }
+]
