@@ -4,7 +4,18 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeTheme();
     initializeControls();
     loadSiteData();
+    initializeAds();
 });
+
+// AdSense 광고 초기화
+function initializeAds() {
+    try {
+        (adsbygoogle = window.adsbygoogle || []).push({});
+        (adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (e) {
+        console.log('AdSense 초기화 중 오류:', e);
+    }
+}
 
 // 전체 사이트 데이터를 저장할 변수
 let allSites = [];
@@ -70,70 +81,41 @@ async function loadSiteData() {
     }
 }
 
-// 카테고리 체크박스 생성
+// 카테고리 태그 생성
 function populateCategoryFilter(sites) {
-    const checkboxContainer = document.getElementById('category-checkboxes');
+    const tagsContainer = document.getElementById('category-tags');
     
     // 중복 제거 후 정렬된 카테고리 목록 생성
     const categories = [...new Set(sites.map(site => site.category))].sort();
     
-    // 기존 체크박스들 제거
-    checkboxContainer.innerHTML = '';
+    // 기존 태그들 제거
+    tagsContainer.innerHTML = '';
     
-    // 새 체크박스들 추가
+    // 새 태그들 추가
     categories.forEach(category => {
-        const checkboxWrapper = document.createElement('div');
-        checkboxWrapper.className = 'category-checkbox';
+        const tag = document.createElement('div');
+        tag.className = 'category-tag';
+        tag.textContent = category;
+        tag.dataset.category = category;
         
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = `category-${category}`;
-        checkbox.value = category;
-        checkbox.addEventListener('change', filterByCategory);
-        
-        const label = document.createElement('label');
-        label.htmlFor = `category-${category}`;
-        label.textContent = category;
-        
-        checkboxWrapper.appendChild(checkbox);
-        checkboxWrapper.appendChild(label);
-        
-        // 체크박스 래퍼 클릭 시 체크박스 토글
-        checkboxWrapper.addEventListener('click', function(e) {
-            if (e.target !== checkbox) {
-                checkbox.checked = !checkbox.checked;
-                filterByCategory();
-            }
-            updateCheckboxStyle(checkboxWrapper, checkbox.checked);
+        // 태그 클릭 이벤트
+        tag.addEventListener('click', function() {
+            // 선택/해제 토글
+            tag.classList.toggle('selected');
+            filterByCategory();
         });
         
-        // 체크박스 직접 클릭 시에도 스타일 업데이트
-        checkbox.addEventListener('change', function() {
-            updateCheckboxStyle(checkboxWrapper, checkbox.checked);
-        });
-        
-        checkboxContainer.appendChild(checkboxWrapper);
+        tagsContainer.appendChild(tag);
     });
-}
-
-// 체크박스 스타일 업데이트
-function updateCheckboxStyle(wrapper, isChecked) {
-    if (isChecked) {
-        wrapper.classList.add('selected');
-    } else {
-        wrapper.classList.remove('selected');
-    }
 }
 
 // 카테고리별 필터링 (다중 선택)
 function filterByCategory() {
-    const checkboxes = document.querySelectorAll('#category-checkboxes input[type="checkbox"]');
+    const selectedTags = document.querySelectorAll('.category-tag.selected');
     const selectedCategories = [];
     
-    checkboxes.forEach(checkbox => {
-        if (checkbox.checked) {
-            selectedCategories.push(checkbox.value);
-        }
+    selectedTags.forEach(tag => {
+        selectedCategories.push(tag.dataset.category);
     });
     
     if (selectedCategories.length === 0) {
@@ -150,15 +132,10 @@ function filterByCategory() {
 
 // 모든 필터 해제
 function clearAllFilters() {
-    const checkboxes = document.querySelectorAll('#category-checkboxes input[type="checkbox"]');
-    const checkboxWrappers = document.querySelectorAll('.category-checkbox');
+    const tags = document.querySelectorAll('.category-tag');
     
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = false;
-    });
-    
-    checkboxWrappers.forEach(wrapper => {
-        wrapper.classList.remove('selected');
+    tags.forEach(tag => {
+        tag.classList.remove('selected');
     });
     
     // 모든 사이트 표시
