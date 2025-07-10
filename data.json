@@ -14,5 +14,13 @@
     "url": "https://menu.bbalrang.com",
     "image": "",
     "category": "뽑기"
+  },
+  {
+    "id": 3,
+    "title": "[BBAL-RANG] 공룡 게임",
+    "description": "공룡 레이싱",
+    "url": "https://dino.bbalrang.com",
+    "image": "",
+    "category": "게임"
   }
 ]
