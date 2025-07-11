@@ -916,7 +916,7 @@ function endGame() {
     showGameResults(isNewRecord);
     showScreen("gameOver");
     loadBestScores(); // 최고 기록 새로고침
-  }, 1000);
+  }, 700);
 }
 
 function showGameResults(isNewRecord) {
