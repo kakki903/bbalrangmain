@@ -55,9 +55,10 @@ function toggleTheme() {
 
 function updateThemeIcon(theme) {
   const icon = document.querySelector(".toggle-icon");
-  if (icon) icon.textContent = theme === "dark" ? "☀️" : "🌙";
+  if (icon) {
+    icon.textContent = theme === "dark" ? "☀️" : "🌙";
+  }
 }
-
 // 사이트 데이터 관련
 let allSites = [];
 
