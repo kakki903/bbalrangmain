@@ -1012,33 +1012,54 @@ window.addEventListener("beforeunload", () => {
   if (gameLoop) clearInterval(gameLoop);
 });
 
-// 모바일 터치 버튼 이벤트 등록
+// 모바일 터치 버튼 이벤트 등록 + 조작키 설정 제거 + 가로화면 전용 + 플레이어 버튼 제한
 window.addEventListener("DOMContentLoaded", () => {
   const mobileControls = document.getElementById("mobile-controls");
   const jumpBtn = document.getElementById("mobile-jump");
   const slideBtn = document.getElementById("mobile-slide");
+  const keySettingsSection =
+    document.getElementById("key-settings")?.parentElement;
+  const playerButtons = document.querySelectorAll(".player-btn");
 
-  // 모바일 환경이면 버튼 표시
-  if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
-    mobileControls.classList.remove("hidden");
+  const isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    // 모바일 환경이면 조작버튼 보여주고, 키 설정은 숨김
+    mobileControls?.classList.remove("hidden");
+    keySettingsSection?.classList.add("hidden");
+
+    // 플레이어 1명 고정 및 나머지 버튼 비활성화
+    playerButtons.forEach((btn) => {
+      if (btn.dataset.players === "1") {
+        btn.classList.add("active");
+      } else {
+        btn.disabled = true;
+        btn.classList.remove("active");
+      }
+    });
+
+    // 가로모드 권장 안내
+    if (window.innerHeight > window.innerWidth) {
+      alert("더 나은 플레이를 위해 기기를 가로 화면으로 돌려주세요!");
+    }
   }
 
-  // 기본적으로 플레이어 1만 조작
-  jumpBtn.addEventListener("touchstart", (e) => {
+  // 기본적으로 플레이어 1만 조작 (모바일 기준)
+  jumpBtn?.addEventListener("touchstart", (e) => {
     e.preventDefault();
     if (typeof PLAYER_KEYS !== "undefined") {
       handlePlayerInput(PLAYER_KEYS[0].jump, true);
     }
   });
 
-  slideBtn.addEventListener("touchstart", (e) => {
+  slideBtn?.addEventListener("touchstart", (e) => {
     e.preventDefault();
     if (typeof PLAYER_KEYS !== "undefined") {
       handlePlayerInput(PLAYER_KEYS[0].slide, true);
     }
   });
 
-  slideBtn.addEventListener("touchend", (e) => {
+  slideBtn?.addEventListener("touchend", (e) => {
     e.preventDefault();
     if (typeof PLAYER_KEYS !== "undefined") {
       handlePlayerInput(PLAYER_KEYS[0].slide, false);
