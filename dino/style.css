@@ -5,6 +5,11 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  overflow-x: hidden;
+}
+
 body {
   font-family: "Arial", sans-serif;
   background: linear-gradient(135deg, #dbeafe, #bfdbfe, #93c5fd);
@@ -160,7 +165,9 @@ h3 {
 /* 게임 화면 */
 #game-screen {
   padding: 20px;
-  max-width: 1300px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 #game-info {
@@ -201,7 +208,7 @@ h3 {
   display: block;
   margin: 0 auto;
   width: 100%;
-  max-width: 1200px;
+  max-width: 100%;
 }
 
 /* 플레이어 상태 표시 */
