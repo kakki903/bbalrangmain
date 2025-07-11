@@ -4,13 +4,21 @@
   box-sizing: border-box;
 }
 
-body {
+/* body {
   background: #f5f7fa;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: #2d3748;
   line-height: 1.6;
-}
+} */
 
+body {
+  font-family: "Arial", sans-serif;
+  background: linear-gradient(135deg, #87ceeb 0%, #f0e68c 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 .container {
   max-width: 1200px;
   margin: 0 auto;
