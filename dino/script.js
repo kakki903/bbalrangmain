@@ -1011,3 +1011,37 @@ function showScreen(screenName) {
 window.addEventListener("beforeunload", () => {
   if (gameLoop) clearInterval(gameLoop);
 });
+
+// 모바일 터치 버튼 이벤트 등록
+window.addEventListener("DOMContentLoaded", () => {
+  const mobileControls = document.getElementById("mobile-controls");
+  const jumpBtn = document.getElementById("mobile-jump");
+  const slideBtn = document.getElementById("mobile-slide");
+
+  // 모바일 환경이면 버튼 표시
+  if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+    mobileControls.classList.remove("hidden");
+  }
+
+  // 기본적으로 플레이어 1만 조작
+  jumpBtn.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    if (typeof PLAYER_KEYS !== "undefined") {
+      handlePlayerInput(PLAYER_KEYS[0].jump, true);
+    }
+  });
+
+  slideBtn.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    if (typeof PLAYER_KEYS !== "undefined") {
+      handlePlayerInput(PLAYER_KEYS[0].slide, true);
+    }
+  });
+
+  slideBtn.addEventListener("touchend", (e) => {
+    e.preventDefault();
+    if (typeof PLAYER_KEYS !== "undefined") {
+      handlePlayerInput(PLAYER_KEYS[0].slide, false);
+    }
+  });
+});

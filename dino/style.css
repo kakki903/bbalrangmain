@@ -316,3 +316,38 @@ h3 {
     width: 200px;
   }
 }
+
+/* 모바일 조작 버튼 스타일 */
+.mobile-controls {
+  position: fixed;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  z-index: 1000;
+}
+
+.mobile-controls button {
+  background: #3b82f6;
+  color: white;
+  padding: 15px 30px;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.mobile-controls button:active {
+  background: #2563eb;
+  transform: scale(0.95);
+}
+
+@media (min-width: 769px) {
+  .mobile-controls {
+    display: none !important;
+  }
+}
