@@ -72,6 +72,14 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeEventListeners();
   loadBestScores();
   updateKeySettings();
+
+  // ✅ Google AdSense 초기화 추가
+  try {
+    (adsbygoogle = window.adsbygoogle || []).push({});
+    (adsbygoogle = window.adsbygoogle || []).push({});
+  } catch (e) {
+    console.log("AdSense 초기화 오류:", e);
+  }
 });
 
 function initializeDOM() {
