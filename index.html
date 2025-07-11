@@ -1,3 +1,4 @@
+<!-- index.html (메인 페이지) -->
 <!DOCTYPE html>
 <html lang="ko">
   <head>
@@ -5,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BBAL-RANG</title>
     <link href="style.css" rel="stylesheet" type="text/css" />
+    <script src="script.js" defer></script>
 
     <!-- Google AdSense -->
     <script
@@ -16,25 +18,8 @@
 
   <body>
     <div class="container">
-      <header class="header">
-        <h1>BBAL-RANG</h1>
-        <p>다양한 사이트를 사용해보세요</p>
-
-        <div class="controls">
-          <div class="theme-toggle">
-            <button id="theme-toggle" class="toggle-btn">
-              <span class="toggle-icon">🌙</span>
-            </button>
-          </div>
-
-          <div class="category-filter">
-            <h3>카테고리 선택</h3>
-            <div id="category-tags" class="category-tags-container">
-              <!-- 카테고리 태그들이 여기에 동적으로 생성됩니다 -->
-            </div>
-          </div>
-        </div>
-      </header>
+      <!-- 공통 헤더 로드 -->
+      <header id="main-header"></header>
 
       <!-- 상단 광고 -->
       <div class="ad-container">
@@ -49,9 +34,7 @@
       </div>
 
       <main class="main">
-        <div id="cards-container" class="cards-container">
-          <!-- 카드들이 여기에 동적으로 생성됩니다 -->
-        </div>
+        <div id="cards-container" class="cards-container"></div>
 
         <!-- 하단 광고 -->
         <div class="ad-container">
@@ -65,8 +48,9 @@
           ></ins>
         </div>
       </main>
-    </div>
 
-    <script src="script.js"></script>
+      <!-- 공통 푸터 로드 -->
+      <footer id="main-footer"></footer>
+    </div>
   </body>
 </html>

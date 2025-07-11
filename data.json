@@ -2,9 +2,9 @@
   {
     "id": 1,
     "title": "[BBAL-RANG] 공룡 게임",
-    "description": "공룡 레이싱",
+    "description": "달려라 공룡! 스페이스바로 점프하세요.",
     "url": "https://bbalrang.com/dino",
-    "image": "",
+    "image": "img/dino.png",
     "category": "게임"
   }
 ]
