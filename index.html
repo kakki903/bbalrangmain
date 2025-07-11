@@ -1,11 +1,10 @@
-<!-- index.html (메인 페이지) -->
 <!DOCTYPE html>
 <html lang="ko">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BBAL-RANG</title>
-    <link href="style.css" rel="stylesheet" type="text/css" />
+    <link href="style.css" rel="stylesheet" />
     <script src="script.js" defer></script>
 
     <!-- Google AdSense -->
@@ -15,10 +14,8 @@
       crossorigin="anonymous"
     ></script>
   </head>
-
   <body>
     <div class="container">
-      <!-- 공통 헤더 로드 -->
       <header id="main-header"></header>
 
       <!-- 상단 광고 -->
@@ -34,7 +31,9 @@
       </div>
 
       <main class="main">
-        <div id="cards-container" class="cards-container"></div>
+        <div id="cards-container" class="cards-container">
+          <!-- 카드들이 생성될 영역 -->
+        </div>
 
         <!-- 하단 광고 -->
         <div class="ad-container">
@@ -49,7 +48,6 @@
         </div>
       </main>
 
-      <!-- 공통 푸터 로드 -->
       <footer id="main-footer"></footer>
     </div>
   </body>

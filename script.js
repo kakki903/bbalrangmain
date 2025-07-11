@@ -1,13 +1,11 @@
-// DOM 로딩 후 초기화
 document.addEventListener("DOMContentLoaded", async function () {
   await loadLayout();
-  initializeTheme();
   initializeControls();
   loadSiteData();
   initializeAds();
 });
 
-// header/footer 동적 삽입
+// header/footer 불러오기
 async function loadLayout() {
   const header = document.getElementById("main-header");
   const footer = document.getElementById("main-footer");
@@ -23,7 +21,7 @@ async function loadLayout() {
   }
 }
 
-// AdSense 초기화
+// 광고 초기화
 function initializeAds() {
   try {
     (adsbygoogle = window.adsbygoogle || []).push({});
@@ -33,33 +31,11 @@ function initializeAds() {
   }
 }
 
-// 테마 관련
-function initializeTheme() {
-  const theme = localStorage.getItem("theme") || "light";
-  document.documentElement.setAttribute("data-theme", theme);
-  updateThemeIcon(theme);
-}
-
 function initializeControls() {
-  const toggle = document.getElementById("theme-toggle");
-  if (toggle) toggle.addEventListener("click", toggleTheme);
+  // 현재는 사용할 추가 컨트롤 없음
 }
 
-function toggleTheme() {
-  const current = document.documentElement.getAttribute("data-theme");
-  const newTheme = current === "dark" ? "light" : "dark";
-  document.documentElement.setAttribute("data-theme", newTheme);
-  localStorage.setItem("theme", newTheme);
-  updateThemeIcon(newTheme);
-}
-
-function updateThemeIcon(theme) {
-  const icon = document.querySelector(".toggle-icon");
-  if (icon) {
-    icon.textContent = theme === "dark" ? "☀️" : "🌙";
-  }
-}
-// 사이트 데이터 관련
+// 데이터 로딩
 let allSites = [];
 
 async function loadSiteData() {
