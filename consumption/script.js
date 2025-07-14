@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
     Kakao.isInitialized &&
     !Kakao.isInitialized()
   ) {
-    Kakao.init("YOUR_KAKAO_JS_KEY"); // 실제 카카오 JavaScript 키로 교체 필요
+    Kakao.init("ffedd29f24efc642832be656deca1820"); // 실제 카카오 JavaScript 키로 교체 필요
   }
 
   loadTestData();
