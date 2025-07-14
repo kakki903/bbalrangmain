@@ -6,13 +6,12 @@ let currentResults = null;
 
 // 카카오 SDK 초기화
 document.addEventListener("DOMContentLoaded", function () {
-  // 카카오 JavaScript 키로 초기화 (실제 키로 교체 필요)
   if (
     typeof Kakao !== "undefined" &&
     Kakao.isInitialized &&
     !Kakao.isInitialized()
   ) {
-    Kakao.init("YOUR_KAKAO_JS_KEY"); // 실제 카카오 JavaScript 키로 교체 필요
+    Kakao.init("YOUR_KAKAO_JS_KEY");
   }
 
   loadTestData();
@@ -23,7 +22,9 @@ document.addEventListener("DOMContentLoaded", function () {
 async function loadTestData() {
   try {
     const response = await fetch("data.json");
-    testData = await response.json();
+    const data = await response.json();
+    testData = data;
+    testData.shuffledQuestions = [...data.questions]; // 원본 복사
     console.log("테스트 데이터 로드 완료");
     return testData;
   } catch (error) {
@@ -32,65 +33,23 @@ async function loadTestData() {
   }
 }
 
-// URL에서 공유된 결과 확인
-function checkURLForSharedResult() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const percentageResults = {};
-
-  // URL 파라미터에서 비율 데이터 추출
-  const categoryMapping = {
-    food: "식비",
-    shopping: "쇼핑",
-    subscription: "구독/디지털",
-    saving: "저축/계획",
-    fixed: "고정비",
-    impulse: "즉흥/기타",
-    goods: "굿즈/취미/이벤트",
-  };
-
-  for (const [key, value] of urlParams) {
-    if (categoryMapping[key] && value) {
-      const category = categoryMapping[key];
-      percentageResults[category] = parseInt(value);
-    }
+// 질문 순서 랜덤화
+function shuffleQuestions() {
+  const shuffled = [...testData.questions];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-
-  // 결과 데이터가 있으면 결과 화면으로 이동
-  if (Object.keys(percentageResults).length > 0) {
-    showResultFromURL(percentageResults);
-  }
+  testData.shuffledQuestions = shuffled;
 }
 
-// URL에서 받은 결과로 결과 화면 표시
-function showResultFromURL(percentageResults) {
-  if (!testData) {
-    setTimeout(() => showResultFromURL(percentageResults), 100);
-    return;
+// 질문 보기 순서 랜덤 섞기
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
   }
-
-  // 비율을 바탕으로 결과 객체 생성
-  const results = Object.entries(percentageResults).map(
-    ([category, percentage]) => ({
-      category,
-      score: 0, // URL에서 온 경우 원점수는 의미없음
-      percentage: percentage,
-      personality: testData.personalityTypes[category],
-    })
-  );
-
-  // 비율 순으로 정렬
-  const sortedResults = results.sort((a, b) => b.percentage - a.percentage);
-
-  // 결과를 currentResults에 저장 (공유 기능을 위해)
-  currentResults = {};
-  sortedResults.forEach((result) => {
-    currentResults[result.category] = result.percentage;
-  });
-
-  // 결과 화면 표시
-  showScreen("result-screen");
-  renderResultRanking(sortedResults);
-  renderDetailCard(sortedResults[0]);
+  return array;
 }
 
 // 테스트 시작
@@ -103,168 +62,51 @@ function startTest() {
   currentQuestion = 0;
   answers = [];
 
-  // 질문 순서 랜덤화
   shuffleQuestions();
-
   showScreen("question-screen");
   showQuestion();
 }
 
-// 질문 순서 랜덤화
-function shuffleQuestions() {
-  for (let i = testData.questions.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [testData.questions[i], testData.questions[j]] = [
-      testData.questions[j],
-      testData.questions[i],
-    ];
-  }
-}
-
-// 성향 미리보기 표시
-function showPreview() {
-  if (!testData) {
-    alert("데이터를 로드하는 중입니다. 잠시 후 다시 시도해주세요.");
-    return;
-  }
-
-  showScreen("preview-screen");
-  renderPersonalityGrid();
-}
-
-// 시작 화면으로 돌아가기
-function showStartScreen() {
-  showScreen("start-screen");
-  // URL 파라미터 제거
-  window.history.replaceState({}, document.title, window.location.pathname);
-}
-
-// 화면 전환
-function showScreen(screenId) {
-  document.querySelectorAll(".screen").forEach((screen) => {
-    screen.classList.remove("active");
-  });
-  document.getElementById(screenId).classList.add("active");
-}
-
-// 성향 그리드 렌더링
-function renderPersonalityGrid() {
-  const grid = document.getElementById("personality-grid");
-  grid.innerHTML = "";
-
-  Object.entries(testData.personalityTypes).forEach(
-    ([category, personality]) => {
-      const card = document.createElement("div");
-      // 카테고리명을 CSS 클래스명으로 변환 (공백과 특수문자 제거)
-      const categoryClass = category.replace(/[^가-힣a-zA-Z0-9]/g, "");
-      card.className = `personality-preview-card ${categoryClass}`;
-      card.onclick = () => togglePersonalityDetail(category, card);
-
-      card.innerHTML = `
-            <div class="preview-emoji">${personality.emoji}</div>
-            <div class="preview-name">${personality.name}</div>
-            <div class="preview-category">${category}</div>
-        `;
-
-      grid.appendChild(card);
-    }
-  );
-}
-
-// 성향 상세 정보 토글
-function togglePersonalityDetail(category, cardElement) {
-  const detailContainer = document.getElementById("personality-detail");
-  const personality = testData.personalityTypes[category];
-
-  // 모든 카드의 active 클래스 제거
-  document.querySelectorAll(".personality-preview-card").forEach((card) => {
-    card.classList.remove("active");
-  });
-
-  // 현재 카드가 이미 활성화되어 있다면 토글 (닫기)
-  if (
-    detailContainer.classList.contains("active") &&
-    detailContainer.dataset.currentCategory === category
-  ) {
-    detailContainer.classList.remove("active");
-    detailContainer.dataset.currentCategory = "";
-    return;
-  }
-
-  // 새로운 카드 활성화
-  cardElement.classList.add("active");
-  detailContainer.dataset.currentCategory = category;
-
-  detailContainer.innerHTML = `
-        <div class="preview-detail-header">
-            <div class="preview-detail-emoji">${personality.emoji}</div>
-            <div class="preview-detail-info">
-                <h3>${personality.name}</h3>
-                <div class="preview-detail-category">${category}</div>
-            </div>
-        </div>
-        <div class="preview-detail-description">
-            ${personality.description}
-        </div>
-        <div class="preview-detail-quote">
-            ${personality.quote}
-        </div>
-    `;
-
-  detailContainer.classList.add("active");
-}
-
 // 질문 표시
 function showQuestion() {
-  const question = testData.questions[currentQuestion];
-  const progress = ((currentQuestion + 1) / testData.questions.length) * 100;
+  const question = testData.shuffledQuestions[currentQuestion];
+  const progress =
+    ((currentQuestion + 1) / testData.shuffledQuestions.length) * 100;
 
   document.getElementById("progress-fill").style.width = progress + "%";
   document.getElementById("question-number").textContent = `질문 ${
     currentQuestion + 1
-  }/${testData.questions.length}`;
+  }/${testData.shuffledQuestions.length}`;
   document.getElementById("question-text").textContent = question.question;
 
   const optionsContainer = document.getElementById("options-container");
   optionsContainer.innerHTML = "";
 
-  // 답변 순서 랜덤화를 위한 인덱스 배열 생성
   const optionIndices = Array.from(
     { length: question.options.length },
     (_, i) => i
   );
   shuffleArray(optionIndices);
 
-  // 랜덤화된 순서로 답변 표시
-  optionIndices.forEach((originalIndex, displayIndex) => {
+  optionIndices.forEach((originalIndex) => {
     const button = document.createElement("button");
     button.className = "option-btn";
     button.textContent = question.options[originalIndex];
-    button.onclick = () => selectOption(originalIndex); // 원래 인덱스로 답변 저장
+    button.onclick = () => selectOption(originalIndex);
     optionsContainer.appendChild(button);
   });
-}
-
-// 배열 랜덤 섞기 유틸리티 함수
-function shuffleArray(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
 }
 
 // 선택지 선택
 function selectOption(optionIndex) {
   const buttons = document.querySelectorAll(".option-btn");
   buttons.forEach((btn) => btn.classList.remove("selected"));
-  buttons[optionIndex].classList.add("selected");
-
+  // class 추가는 의미 없지만 유지
   setTimeout(() => {
     answers.push(optionIndex);
     currentQuestion++;
 
-    if (currentQuestion < testData.questions.length) {
+    if (currentQuestion < testData.shuffledQuestions.length) {
       showQuestion();
     } else {
       calculateResult();
@@ -276,14 +118,12 @@ function selectOption(optionIndex) {
 function calculateResult() {
   const categoryScores = {};
 
-  // 모든 카테고리 초기화
   Object.keys(testData.personalityTypes).forEach((category) => {
     categoryScores[category] = 0;
   });
 
-  // 답변에 따른 점수 계산
   answers.forEach((answerIndex, questionIndex) => {
-    const question = testData.questions[questionIndex];
+    const question = testData.shuffledQuestions[questionIndex];
     const category = question.categories[answerIndex];
     categoryScores[category]++;
   });
