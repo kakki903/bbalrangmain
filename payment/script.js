@@ -433,7 +433,6 @@ function showPreviewDetail(category, detailContainer) {
 
   const detailHTML = `
         <div class="preview-detail-header">
-            <div class="preview-detail-emoji">${personality.emoji}</div>
             <div class="preview-detail-info">
                 <h3>${personality.name}</h3>
                 <div class="preview-detail-category">${category}</div>
