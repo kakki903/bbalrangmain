@@ -2,7 +2,7 @@
   {
     "id": 1,
     "title": "[BBAL-RANG] 공룡 게임",
-    "description": "달려라 공룡! 스페이스바로 점프하세요.",
+    "description": "🦕 누가 더 잘달리나",
     "url": "https://bbalrang.com/dino",
     "image": "img/dino.png",
     "category": "게임"
@@ -10,7 +10,7 @@
   {
     "id": 2,
     "title": "[BBAL-RANG] 소비 성향",
-    "description": "소비 성향! 내 돈 여기서 나간다.",
+    "description": "💰내 돈, 여기서 다 나간다.",
     "url": "https://bbalrang.com/consumption",
     "image": "img/consumption.png",
     "category": "성향"
