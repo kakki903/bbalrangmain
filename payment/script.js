@@ -3,6 +3,7 @@ let currentQuestion = 0;
 let answers = [];
 let testData = null;
 let currentResults = null;
+let userName = "";
 
 // 카카오 SDK 초기화
 document.addEventListener("DOMContentLoaded", function () {
@@ -48,6 +49,23 @@ function checkURLForSharedResult() {
     goods: "굿즈/취미/이벤트",
   };
 
+  // 공유된 이름 확인 및 디코딩
+  const sharedName = urlParams.get("name");
+  if (sharedName) {
+    try {
+      // 이중 인코딩된 경우를 대비해 두 번 디코딩 시도
+      userName = decodeURIComponent(decodeURIComponent(sharedName));
+    } catch (e) {
+      try {
+        // 한 번만 인코딩된 경우
+        userName = decodeURIComponent(sharedName);
+      } catch (e2) {
+        // 디코딩 실패 시 원본 사용
+        userName = sharedName;
+      }
+    }
+  }
+
   for (const [key, value] of urlParams) {
     if (categoryMapping[key] && value) {
       const category = categoryMapping[key];
@@ -68,15 +86,28 @@ function showResultFromURL(percentageResults) {
     return;
   }
 
+  // 공유받은 결과의 제목 업데이트
+  const resultTitle = document.getElementById("result-title");
+  if (userName) {
+    resultTitle.innerHTML = `🎉 ${userName}님의 소비 성향 결과`;
+  } else {
+    resultTitle.innerHTML = `🎉 당신의 소비 성향 결과`;
+  }
+
   // 비율을 바탕으로 결과 객체 생성
-  const results = Object.entries(percentageResults).map(
-    ([category, percentage]) => ({
+  const results = Object.entries(percentageResults)
+    .map(([category, percentage]) => ({
       category,
       score: 0, // URL에서 온 경우 원점수는 의미없음
       percentage: percentage,
-      personality: testData.personalityTypes[category],
-    })
-  );
+      personality: testData.personalityTypes[category] || {
+        name: "알 수 없음",
+        emoji: "❓",
+        description: "알 수 없는 성향입니다.",
+        quote: "데이터를 확인해주세요.",
+      },
+    }))
+    .filter((result) => result.personality); // 유효한 성향만 포함
 
   // 비율 순으로 정렬
   const sortedResults = results.sort((a, b) => b.percentage - a.percentage);
@@ -88,15 +119,35 @@ function showResultFromURL(percentageResults) {
   });
 
   // 결과 화면 표시
-  showScreen("result-screen");
-  renderResultRanking(sortedResults);
-  renderDetailCard(sortedResults[0]);
+  if (sortedResults.length > 0) {
+    showScreen("result-screen");
+    renderResultRanking(sortedResults);
+    renderDetailCard(sortedResults[0]);
+  } else {
+    // 유효한 결과가 없으면 시작 화면으로
+    showScreen("start-screen");
+  }
 }
 
 // 테스트 시작
 function startTest() {
   if (!testData) {
     alert("데이터를 로드하는 중입니다. 잠시 후 다시 시도해주세요.");
+    return;
+  }
+
+  // 이름 입력 확인
+  const nameInput = document.getElementById("user-name");
+  userName = nameInput.value.trim();
+
+  if (!userName) {
+    nameInput.focus();
+    nameInput.style.borderColor = "#ff6b6b";
+    nameInput.style.animation = "shake 0.5s ease-in-out";
+    setTimeout(() => {
+      nameInput.style.borderColor = "#e9ecef";
+      nameInput.style.animation = "";
+    }, 500);
     return;
   }
 
@@ -236,11 +287,11 @@ function showQuestion() {
   shuffleArray(optionIndices);
 
   // 랜덤화된 순서로 답변 표시
-  optionIndices.forEach((originalIndex, displayIndex) => {
+  optionIndices.forEach((originalIndex) => {
     const button = document.createElement("button");
     button.className = "option-btn";
     button.textContent = question.options[originalIndex];
-    button.onclick = () => selectOption(originalIndex); // 원래 인덱스로 답변 저장
+    button.onclick = () => selectOption(originalIndex);
     optionsContainer.appendChild(button);
   });
 }
@@ -257,8 +308,23 @@ function shuffleArray(array) {
 // 선택지 선택
 function selectOption(optionIndex) {
   const buttons = document.querySelectorAll(".option-btn");
-  buttons.forEach((btn) => btn.classList.remove("selected"));
-  buttons[optionIndex].classList.add("selected");
+
+  // 클릭된 버튼 찾기
+  let clickedButton = null;
+  buttons.forEach((btn) => {
+    btn.classList.remove("selected");
+    if (
+      btn.textContent ===
+      testData.questions[currentQuestion].options[optionIndex]
+    ) {
+      clickedButton = btn;
+    }
+  });
+
+  // 클릭된 버튼에 선택 표시
+  if (clickedButton) {
+    clickedButton.classList.add("selected");
+  }
 
   setTimeout(() => {
     answers.push(optionIndex);
@@ -295,6 +361,14 @@ function calculateResult() {
 function showResult(categoryScores) {
   currentResults = categoryScores;
   showScreen("result-screen");
+
+  // 개인화된 제목 표시
+  const resultTitle = document.getElementById("result-title");
+  if (userName) {
+    resultTitle.innerHTML = `🎉 ${userName}님의 소비 성향 결과`;
+  } else {
+    resultTitle.innerHTML = `🎉 당신의 소비 성향 결과`;
+  }
 
   // 총 점수 계산
   const totalScore = Object.values(categoryScores).reduce(
@@ -363,7 +437,11 @@ function renderResultRanking(sortedResults) {
 
   topResults.forEach((result, index) => {
     const rankItem = document.createElement("div");
-    rankItem.className = `rank-item rank-${index + 1} clickable`;
+    // 카테고리별 클래스명 생성 (공백과 특수문자 제거)
+    const categoryClass = result.category.replace(/[^가-힣a-zA-Z0-9]/g, "");
+    rankItem.className = `rank-item rank-${
+      index + 1
+    } clickable ${categoryClass}`;
     rankItem.onclick = () => selectRankItem(result, rankItem, index);
 
     rankItem.innerHTML = `
@@ -442,10 +520,15 @@ function shareKakao() {
 
   // 1위 결과 찾기 (현재 활성화된 카드에서)
   const activeRankItem = document.querySelector(".rank-item.active");
+  if (!activeRankItem) {
+    alert("선택된 결과가 없습니다.");
+    return;
+  }
+
   const topPersonalityName =
-    activeRankItem.querySelector(".rank-name").textContent;
+    activeRankItem.querySelector(".rank-name")?.textContent || "알 수 없음";
   const topPercentage =
-    activeRankItem.querySelector(".rank-percentage").textContent;
+    activeRankItem.querySelector(".rank-percentage")?.textContent || "0%";
 
   // 성향 정보 찾기
   let topPersonality = null;
@@ -456,13 +539,27 @@ function shareKakao() {
     }
   }
 
+  if (!topPersonality) {
+    topPersonality = {
+      quote: "나만의 독특한 소비 성향!",
+    };
+  }
+
   const shareURL = generateShareURL();
+
+  // 공유 메시지에 이름 포함
+  const shareTitle = userName
+    ? `💰 ${userName}님의 소비 성향 테스트 결과`
+    : "💰 소비 성향 테스트 결과";
+  const shareDescription = userName
+    ? `${userName}님의 소비 성향은 "${topPersonalityName}"! (${topPercentage})\n${topPersonality.quote}`
+    : `나의 소비 성향은 "${topPersonalityName}"! (${topPercentage})\n${topPersonality.quote}`;
 
   Kakao.Share.sendDefault({
     objectType: "feed",
     content: {
-      title: "💰 소비 성향 테스트 결과",
-      description: `나의 소비 성향은 "${topPersonalityName}"! (${topPercentage})\n${topPersonality.quote}`,
+      title: shareTitle,
+      description: shareDescription,
       imageUrl: "https://your-domain.com/og-image.png", // 실제 이미지 URL로 교체
       link: {
         mobileWebUrl: shareURL,
@@ -513,6 +610,11 @@ function generateShareURL() {
 
   const params = new URLSearchParams();
 
+  // 이름이 있으면 URL에 포함
+  if (userName) {
+    params.append("name", encodeURIComponent(userName));
+  }
+
   // 카테고리를 영문으로 매핑
   const categoryMapping = {
     식비: "food",
@@ -560,7 +662,12 @@ function restartTest() {
   window.history.replaceState({}, document.title, window.location.pathname);
 
   // 테스트 데이터 다시 로드해서 원본 순서로 복원 후 재시작
-  loadTestData().then(() => {
-    showScreen("start-screen");
-  });
+  loadTestData()
+    .then(() => {
+      showScreen("start-screen");
+    })
+    .catch((error) => {
+      console.error("데이터 로드 중 오류:", error);
+      showScreen("start-screen");
+    });
 }

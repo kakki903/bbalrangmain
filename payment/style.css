@@ -40,6 +40,7 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -57,6 +58,62 @@ body {
   animation: bounce 2s infinite;
 }
 
+.character.floating {
+  animation: floating 3s ease-in-out infinite;
+}
+
+.title-animate {
+  animation: slideInFromTop 1s ease-out;
+}
+
+.subtitle-animate {
+  animation: slideInFromBottom 1s ease-out 0.3s both;
+}
+
+/* 이름 입력 섹션 */
+.name-input-section {
+  margin-bottom: 25px;
+  animation: fadeInScale 1s ease-out 0.6s both;
+}
+
+.name-label {
+  display: block;
+  color: #555;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.name-input {
+  width: 100%;
+  max-width: 200px;
+  padding: 12px 20px;
+  border: 2px solid #e9ecef;
+  border-radius: 25px;
+  font-size: 1rem;
+  text-align: center;
+  font-family: inherit;
+  color: #333;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.name-input:focus {
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  transform: scale(1.05);
+}
+
+.name-input::placeholder {
+  color: #999;
+}
+
+.pulse-btn {
+  animation: pulse-btn 2s infinite;
+}
+
 @keyframes bounce {
   0%,
   20%,
@@ -65,11 +122,106 @@ body {
   100% {
     transform: translateY(0);
   }
+
   40% {
     transform: translateY(-10px);
   }
+
   60% {
     transform: translateY(-5px);
+  }
+}
+
+@keyframes floating {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-15px) rotate(2deg);
+  }
+  66% {
+    transform: translateY(-10px) rotate(-2deg);
+  }
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-btn {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.5);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
   }
 }
 
@@ -157,11 +309,13 @@ p {
 
 .question-container {
   text-align: center;
+  animation: slideInUp 0.6s ease-out;
 }
 
 .question-character {
   font-size: 3rem;
   margin-bottom: 20px;
+  animation: floating 2s ease-in-out infinite;
 }
 
 #question-text {
@@ -226,34 +380,71 @@ p {
   font-weight: 600;
 }
 
+.result-title-animate {
+  animation: zoomIn 0.8s ease-out;
+}
+
 .result-ranking {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+  padding: 0 5px;
 }
 
 .rank-item {
   background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-  border-radius: 15px;
-  padding: 15px 20px;
+  border-radius: 12px;
+  padding: 12px 16px;
   cursor: pointer;
   transition: all 0.3s ease;
   border: 2px solid transparent;
   position: relative;
+  min-height: 85px;
+  display: flex;
+  align-items: center;
+  color: white;
+}
+
+/* 성향별 순위 카드 배경색 */
+.rank-item.식비 {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+}
+
+.rank-item.쇼핑 {
+  background: linear-gradient(135deg, #ff9ff3 0%, #f368e0 100%);
+}
+
+.rank-item.구독디지털 {
+  background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+}
+
+.rank-item.저축계획 {
+  background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+}
+
+.rank-item.고정비 {
+  background: linear-gradient(135deg, #6c5ce7 0%, #5f3dc4 100%);
+}
+
+.rank-item.즉흥기타 {
+  background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+}
+
+.rank-item.굿즈취미이벤트 {
+  background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
 }
 
 .rank-item:hover {
   transform: translateY(-5px);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
 }
 
 .rank-item.active {
-  border-color: #667eea;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
+  border-color: #ffffff;
   transform: translateY(-5px);
-  box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  filter: brightness(1.1);
 }
 
 .rank-item.clickable {
@@ -312,12 +503,15 @@ p {
 .rank-content {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  width: 100%;
 }
 
 .rank-emoji {
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   flex-shrink: 0;
+  width: 40px;
+  text-align: center;
 }
 
 .rank-info {
@@ -330,29 +524,32 @@ p {
   font-weight: 600;
   margin-bottom: 2px;
   line-height: 1.2;
+  word-break: keep-all;
+  white-space: nowrap;
 }
 
 .rank-percentage {
   font-size: 1rem;
   font-weight: 500;
-  color: #667eea;
-  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.9);
+  opacity: 0.9;
 }
 
 .rank-item.active .rank-percentage {
   color: white;
-  opacity: 0.9;
+  opacity: 1;
 }
 
 .detail-card {
-  border-radius: 20px;
-  padding: 30px;
+  border-radius: 18px;
+  padding: 25px 20px;
   color: white;
   text-align: center;
   position: relative;
   overflow: hidden;
   animation: slideUp 0.5s ease-out;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
+  margin-top: 10px;
 }
 
 .detail-card.식비 {
@@ -388,6 +585,7 @@ p {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -415,6 +613,7 @@ p {
   0% {
     transform: translateX(-100%) translateY(-100%) rotate(45deg);
   }
+
   100% {
     transform: translateX(100%) translateY(100%) rotate(45deg);
   }
@@ -437,6 +636,8 @@ p {
   font-size: 1.8rem;
   font-weight: 700;
   margin-bottom: 8px;
+  word-break: keep-all;
+  white-space: nowrap;
 }
 
 .detail-category {
@@ -507,19 +708,20 @@ p {
 }
 
 .share-divider {
-  width: 60px;
+  width: 50px;
   height: 2px;
   background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-  margin: 0 auto 20px;
+  margin: 15px auto 18px;
   border-radius: 1px;
 }
 
 .share-buttons {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   flex-wrap: wrap;
+  padding: 0 10px;
 }
 
 .share-btn {
@@ -564,13 +766,13 @@ p {
 .share-hint {
   text-align: center;
   color: #999;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   animation: pulse 2s infinite;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .restart-button {
@@ -701,6 +903,8 @@ p {
   font-weight: 700;
   margin-bottom: 5px;
   line-height: 1.2;
+  word-break: keep-all;
+  white-space: nowrap;
 }
 
 .preview-category {
@@ -826,9 +1030,11 @@ p {
   0% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
+
   100% {
     transform: scale(1);
   }
@@ -959,11 +1165,11 @@ p {
 /* 모바일 최적화 */
 @media (max-width: 480px) {
   body {
-    padding: 10px;
+    padding: 8px;
   }
 
   .screen {
-    padding: 20px;
+    padding: 18px;
   }
 
   .character {
@@ -984,32 +1190,37 @@ p {
   }
 
   .result-ranking {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    padding: 0;
+    margin-bottom: 20px;
   }
 
   .rank-item {
-    padding: 12px 15px;
+    padding: 10px 12px;
+    min-height: 75px;
   }
 
   .rank-content {
-    gap: 10px;
+    gap: 8px;
   }
 
   .rank-emoji {
-    font-size: 2rem;
+    font-size: 1.8rem;
+    width: 35px;
   }
 
   .rank-name {
-    font-size: 0.95rem;
-  }
-
-  .rank-percentage {
     font-size: 0.9rem;
   }
 
+  .rank-percentage {
+    font-size: 0.85rem;
+  }
+
   .detail-card {
-    padding: 25px;
+    padding: 20px 16px;
+    margin-bottom: 20px;
   }
 
   .detail-emoji {
@@ -1018,7 +1229,7 @@ p {
   }
 
   .detail-title {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
 
   .detail-percentage {
@@ -1026,14 +1237,25 @@ p {
     font-size: 1.1rem;
   }
 
+  .share-divider {
+    margin: 12px auto 15px;
+  }
+
   .share-buttons {
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    padding: 0 5px;
+    margin-bottom: 15px;
   }
 
   .share-btn {
     min-width: auto;
     padding: 10px 15px;
     font-size: 0.85rem;
+  }
+
+  .share-hint {
+    margin-bottom: 15px;
+    font-size: 0.8rem;
   }
 }

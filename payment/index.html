@@ -13,13 +13,26 @@
       crossorigin="anonymous"
     ></script>
   </head>
+
   <body>
     <div class="container">
       <!-- 시작 화면 -->
       <div id="start-screen" class="screen active">
-        <div class="character">💰</div>
-        <h1>소비 성향 테스트</h1>
-        <p>당신의 지갑 스타일을 찾아보세요!</p>
+        <div class="character floating">💰</div>
+        <h1 class="title-animate">소비 성향 테스트</h1>
+        <p class="subtitle-animate">당신의 지갑 스타일을 찾아보세요!</p>
+
+        <!-- 이름 입력 섹션 -->
+        <div class="name-input-section">
+          <label for="user-name" class="name-label">이름을 입력해주세요</label>
+          <input
+            type="text"
+            id="user-name"
+            class="name-input"
+            placeholder="홍길동"
+            maxlength="10"
+          />
+        </div>
 
         <!-- 광고 영역 -->
         <div class="ad-container">
@@ -36,7 +49,9 @@
           </script>
         </div>
 
-        <button class="start-button" onclick="startTest()">테스트 시작</button>
+        <button class="start-button pulse-btn" onclick="startTest()">
+          테스트 시작
+        </button>
         <button class="preview-button" onclick="showPreview()">
           <span>📊</span> 성향 미리보기
         </button>
@@ -108,7 +123,9 @@
       <!-- 결과 화면 -->
       <div id="result-screen" class="screen">
         <div class="result-container">
-          <h2>🎉 당신의 소비 성향 결과</h2>
+          <h2 id="result-title" class="result-title-animate">
+            🎉 당신의 소비 성향 결과
+          </h2>
 
           <div class="result-ranking" id="result-ranking">
             <!-- 결과 순위가 여기에 동적으로 생성됩니다 -->
