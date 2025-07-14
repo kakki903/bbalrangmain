@@ -221,14 +221,23 @@ function showResult() {
   // 공유 버튼 컨테이너 생성
   const shareContainer = document.createElement("div");
   shareContainer.className = "share-container";
+
+  // 파라미터 생성
+  const urlParams = new URLSearchParams();
+  Object.entries(answers).forEach(([category, score]) => {
+    urlParams.append(category, score);
+  });
+
+  const shareUrl = `${window.location.href}?${urlParams.toString()}`;
+
   shareContainer.innerHTML = `
         <div class="share-divider"></div>
         <div class="share-buttons">
-            <button class="share-btn kakao-share" onclick="shareToKakao()">
+            <button class="share-btn kakao-share" onclick="shareToKakao('${shareUrl}')">
                 <span class="share-icon">💬</span>
                 카카오톡 공유하기
             </button>
-            <button class="share-btn link-share" onclick="copyLink()">
+            <button class="share-btn link-share" onclick="copyLink('${shareUrl}')">
                 <span class="share-icon">🔗</span>
                 링크 복사하기
             </button>
@@ -320,13 +329,12 @@ function showPersonalityDetail(
 }
 
 // 카카오톡 공유 기능
-function shareToKakao() {
+function shareToKakao(shareUrl) {
   const topAnswers = Object.entries(answers)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 4);
 
   const topPersonality = personalityTypes[topAnswers[0][0]];
-  const url = window.location.href;
 
   const shareText = `💰 소비 성향 진단 결과!\n\n${topPersonality.emoji} 내 소비 성향: ${topPersonality.name}\n\n"${topPersonality.quote}"\n\n당신의 소비 성향도 궁금하다면? 👇`;
 
@@ -334,20 +342,19 @@ function shareToKakao() {
     navigator.share({
       title: "💰 소비 성향 진단 테스트",
       text: shareText,
-      url: url,
+      url: shareUrl,
     });
   } else {
     // 카카오톡 공유 URL 생성
     const kakaoUrl = `https://sharer.kakao.com/talk/friends/?url=${encodeURIComponent(
-      url
+      shareUrl
     )}&text=${encodeURIComponent(shareText)}`;
     window.open(kakaoUrl, "_blank");
   }
 }
 
 // 링크 복사 기능
-function copyLink() {
-  const url = window.location.href;
+function copyLink(url) {
   navigator.clipboard
     .writeText(url)
     .then(() => {
@@ -390,7 +397,7 @@ function createPersonalityGrid() {
   const detailContainer = document.createElement("div");
   detailContainer.className = "personality-preview-detail";
 
-  Object.entries(personalityTypes).forEach(([category, personality], index) => {
+  Object.entries(personalityTypes).forEach(([category, personality]) => {
     const personalityCard = document.createElement("div");
     personalityCard.className = "personality-preview-card";
     personalityCard.style.background =
@@ -404,15 +411,14 @@ function createPersonalityGrid() {
             <div class="preview-category">${category}</div>
         `;
 
-    // 클릭 이벤트 추가
+    // 클릭 이벤트 추가 (토글 방식 구현)
     personalityCard.addEventListener("click", () => {
-      showPreviewDetail(category, detailContainer);
-
-      // 활성화 상태 변경
-      document.querySelectorAll(".personality-preview-card").forEach((card) => {
-        card.classList.remove("active");
-      });
-      personalityCard.classList.add("active");
+      if (detailContainer.classList.contains("active")) {
+        detailContainer.classList.remove("active");
+      } else {
+        showPreviewDetail(category, detailContainer);
+        detailContainer.classList.add("active");
+      }
     });
 
     gridContainer.appendChild(personalityCard);
@@ -420,11 +426,6 @@ function createPersonalityGrid() {
 
   personalityGrid.appendChild(gridContainer);
   personalityGrid.appendChild(detailContainer);
-
-  // 첫 번째 항목을 기본으로 표시
-  const firstCategory = Object.keys(personalityTypes)[0];
-  showPreviewDetail(firstCategory, detailContainer);
-  document.querySelector(".personality-preview-card").classList.add("active");
 }
 
 // 성향 미리보기 상세 정보 표시
@@ -444,10 +445,6 @@ function showPreviewDetail(category, detailContainer) {
     `;
 
   detailContainer.innerHTML = detailHTML;
-  detailContainer.classList.add("active");
-
-  detailContainer.style.animation = "none";
-  detailContainer.offsetHeight; // 리플로우 강제 실행
   detailContainer.style.animation = "slideUp 0.5s ease-out";
 }
 
