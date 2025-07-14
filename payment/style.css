@@ -97,11 +97,37 @@ p {
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
   font-family: inherit;
+  margin-bottom: 15px;
+  display: block;
+  width: 100%;
 }
 
 .start-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.preview-button {
+  background: linear-gradient(135deg, #ffa726 0%, #ff7043 100%);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 25px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+}
+
+.preview-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(255, 167, 38, 0.3);
 }
 
 /* 질문 화면 */
@@ -182,6 +208,12 @@ p {
   transform: translateY(0);
 }
 
+.option-btn.selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+}
+
 /* 결과 화면 */
 .result-container {
   text-align: center;
@@ -192,14 +224,6 @@ p {
   color: #333;
   margin-bottom: 30px;
   font-weight: 600;
-}
-
-.result-chart {
-  margin-bottom: 30px;
-  background: white;
-  border-radius: 20px;
-  padding: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 .result-ranking {
@@ -230,6 +254,25 @@ p {
   color: white;
   transform: translateY(-5px);
   box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+}
+
+.rank-item.clickable {
+  position: relative;
+}
+
+.rank-item.clickable::after {
+  content: "클릭하여 자세히 보기";
+  position: absolute;
+  bottom: 5px;
+  right: 10px;
+  font-size: 0.7rem;
+  color: #999;
+  opacity: 0.7;
+}
+
+.rank-item.active::after {
+  color: white;
+  opacity: 0.8;
 }
 
 .rank-badge {
@@ -302,7 +345,6 @@ p {
 }
 
 .detail-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 20px;
   padding: 30px;
   color: white;
@@ -310,6 +352,35 @@ p {
   position: relative;
   overflow: hidden;
   animation: slideUp 0.5s ease-out;
+  margin-bottom: 30px;
+}
+
+.detail-card.식비 {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+}
+
+.detail-card.쇼핑 {
+  background: linear-gradient(135deg, #ff9ff3 0%, #f368e0 100%);
+}
+
+.detail-card.구독디지털 {
+  background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+}
+
+.detail-card.저축계획 {
+  background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+}
+
+.detail-card.고정비 {
+  background: linear-gradient(135deg, #6c5ce7 0%, #5f3dc4 100%);
+}
+
+.detail-card.즉흥기타 {
+  background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+}
+
+.detail-card.굿즈취미이벤트 {
+  background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
 }
 
 @keyframes slideUp {
@@ -347,28 +418,6 @@ p {
   100% {
     transform: translateX(100%) translateY(100%) rotate(45deg);
   }
-}
-
-@keyframes fillAnimation {
-  from {
-    width: 0%;
-  }
-  to {
-    width: var(--target-width, 100%);
-  }
-}
-
-.result-description {
-  background: white;
-  border-radius: 20px;
-  margin-bottom: 30px;
-  text-align: left;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.personality-card {
-  padding: 25px;
 }
 
 .detail-header {
@@ -457,31 +506,15 @@ p {
   font-size: 1.2rem;
 }
 
-.share-hint {
-  text-align: center;
-  color: #999;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  animation: pulse 2s infinite;
+.share-divider {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+  margin: 0 auto 20px;
+  border-radius: 1px;
 }
 
-.share-icon {
-  font-size: 1.1rem;
-}
-
-@keyframes shine {
-  0% {
-    transform: translateX(-100%) translateY(-100%) rotate(45deg);
-  }
-  100% {
-    transform: translateX(100%) translateY(100%) rotate(45deg);
-  }
-}
-
-.share-container {
+.share-buttons {
   display: flex;
   gap: 15px;
   justify-content: center;
@@ -528,6 +561,18 @@ p {
   font-size: 1.1rem;
 }
 
+.share-hint {
+  text-align: center;
+  color: #999;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: pulse 2s infinite;
+  margin-bottom: 20px;
+}
+
 .restart-button {
   background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
   color: white;
@@ -558,32 +603,6 @@ p {
   font-weight: 700;
 }
 
-.preview-button {
-  background: linear-gradient(135deg, #ffa726 0%, #ff7043 100%);
-  color: white;
-  border: none;
-  padding: 12px 25px;
-  border-radius: 25px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: inherit;
-  margin-top: 15px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: center;
-  width: 100%;
-  max-width: 200px;
-  margin: 15px auto 0;
-}
-
-.preview-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(255, 167, 38, 0.3);
-}
-
 .personality-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -592,7 +611,6 @@ p {
 }
 
 .personality-preview-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 15px;
   padding: 20px 15px;
   cursor: pointer;
@@ -607,6 +625,34 @@ p {
   align-items: center;
   position: relative;
   overflow: hidden;
+}
+
+.personality-preview-card.식비 {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+}
+
+.personality-preview-card.쇼핑 {
+  background: linear-gradient(135deg, #ff9ff3 0%, #f368e0 100%);
+}
+
+.personality-preview-card.구독디지털 {
+  background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+}
+
+.personality-preview-card.저축계획 {
+  background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+}
+
+.personality-preview-card.고정비 {
+  background: linear-gradient(135deg, #6c5ce7 0%, #5f3dc4 100%);
+}
+
+.personality-preview-card.즉흥기타 {
+  background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+}
+
+.personality-preview-card.굿즈취미이벤트 {
+  background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
 }
 
 .personality-preview-card::before {
@@ -675,12 +721,14 @@ p {
   text-align: center;
   margin-bottom: 30px;
   opacity: 0;
-  transform: translateY(20px);
+  max-height: 0;
+  overflow: hidden;
   transition: all 0.5s ease;
 }
 
 .personality-preview-detail.active {
   opacity: 1;
+  max-height: 500px;
   transform: translateY(0);
 }
 
@@ -770,19 +818,20 @@ p {
   box-shadow: 0 8px 20px rgba(108, 117, 125, 0.3);
 }
 
-.share-divider {
-  width: 60px;
-  height: 2px;
-  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-  margin: 0 auto 20px;
-  border-radius: 1px;
+.pulse {
+  animation: pulse 0.5s;
 }
 
-.share-buttons {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-  flex-wrap: wrap;
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* PC 환경에서 컨테이너 크기 조정 */
@@ -871,6 +920,42 @@ p {
   }
 }
 
+/* 광고 컨테이너 스타일 */
+.ad-container {
+  margin: 20px 0;
+  text-align: center;
+  min-height: 90px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e9ecef;
+}
+
+.ad-container ins {
+  width: 100% !important;
+  max-width: 320px;
+}
+
+/* 질문 화면의 광고는 좀 더 작게 */
+#question-screen .ad-container {
+  margin: 15px 0;
+  min-height: 60px;
+}
+
+/* 모바일에서 광고 크기 조정 */
+@media (max-width: 480px) {
+  .ad-container {
+    margin: 15px 0;
+    min-height: 60px;
+  }
+
+  .ad-container ins {
+    max-width: 280px;
+  }
+}
+
 /* 모바일 최적화 */
 @media (max-width: 480px) {
   body {
@@ -941,11 +1026,7 @@ p {
     font-size: 1.1rem;
   }
 
-  .result-chart {
-    padding: 20px;
-  }
-
-  .share-container {
+  .share-buttons {
     flex-direction: column;
     gap: 10px;
   }
@@ -954,28 +1035,5 @@ p {
     min-width: auto;
     padding: 10px 15px;
     font-size: 0.85rem;
-  }
-}
-
-/* 애니메이션 효과 */
-.option-btn.selected {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-color: #667eea;
-}
-
-.pulse {
-  animation: pulse 0.5s;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
   }
 }

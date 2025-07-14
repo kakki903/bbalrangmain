@@ -1,438 +1,201 @@
-// 데이터 변수
-let questions = [];
-let personalityTypes = {};
-let shuffledQuestions = [];
-
-// 게임 상태
+// 전역 변수
 let currentQuestion = 0;
-let answers = {};
+let answers = [];
+let testData = null;
+let currentResults = null;
 
-// DOM 요소
-const startScreen = document.getElementById("start-screen");
-const questionScreen = document.getElementById("question-screen");
-const previewScreen = document.getElementById("preview-screen");
-const resultScreen = document.getElementById("result-screen");
-const startBtn = document.getElementById("start-btn");
-const previewBtn = document.getElementById("preview-btn");
-const backToMainBtn = document.getElementById("back-to-main-btn");
-const questionText = document.getElementById("question-text");
-const optionBtns = document.querySelectorAll(".option-btn");
-const currentQuestionSpan = document.getElementById("current-question");
-const progressBar = document.getElementById("progress");
-const resultChart = document.getElementById("result-chart");
-const resultDescription = document.getElementById("result-description");
-const restartBtn = document.getElementById("restart-btn");
-const personalityGrid = document.getElementById("personality-grid");
-
-// 배열 셔플 함수
-function shuffleArray(array) {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+// 카카오 SDK 초기화
+document.addEventListener("DOMContentLoaded", function () {
+  // 카카오 JavaScript 키로 초기화 (실제 키로 교체 필요)
+  if (
+    typeof Kakao !== "undefined" &&
+    Kakao.isInitialized &&
+    !Kakao.isInitialized()
+  ) {
+    Kakao.init("YOUR_KAKAO_JS_KEY"); // 실제 카카오 JavaScript 키로 교체 필요
   }
-  return shuffled;
-}
+
+  loadTestData();
+  checkURLForSharedResult();
+});
 
 // 데이터 로드
-async function loadData() {
+async function loadTestData() {
   try {
     const response = await fetch("data.json");
-    const data = await response.json();
-    questions = data.questions;
-    personalityTypes = data.personalityTypes;
-
-    // 질문 순서 랜덤화 및 각 질문의 옵션 순서도 랜덤화
-    shuffledQuestions = shuffleArray(questions).map((question) => ({
-      ...question,
-      shuffledOptions: shuffleArray(
-        question.options.map((option, index) => ({
-          text: option,
-          category: question.categories[index],
-        }))
-      ),
-    }));
+    testData = await response.json();
+    console.log("테스트 데이터 로드 완료");
+    return testData;
   } catch (error) {
     console.error("데이터 로드 실패:", error);
+    throw error;
   }
 }
 
-// 이벤트 리스너
-startBtn.addEventListener("click", startTest);
-previewBtn.addEventListener("click", showPreview);
-backToMainBtn.addEventListener("click", backToMain);
-restartBtn.addEventListener("click", restartTest);
+// URL에서 공유된 결과 확인
+function checkURLForSharedResult() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const percentageResults = {};
 
-optionBtns.forEach((btn, index) => {
-  btn.addEventListener("click", () => selectAnswer(index));
-});
+  // URL 파라미터에서 비율 데이터 추출
+  const categoryMapping = {
+    food: "식비",
+    shopping: "쇼핑",
+    subscription: "구독/디지털",
+    saving: "저축/계획",
+    fixed: "고정비",
+    impulse: "즉흥/기타",
+    goods: "굿즈/취미/이벤트",
+  };
+
+  for (const [key, value] of urlParams) {
+    if (categoryMapping[key] && value) {
+      const category = categoryMapping[key];
+      percentageResults[category] = parseInt(value);
+    }
+  }
+
+  // 결과 데이터가 있으면 결과 화면으로 이동
+  if (Object.keys(percentageResults).length > 0) {
+    showResultFromURL(percentageResults);
+  }
+}
+
+// URL에서 받은 결과로 결과 화면 표시
+function showResultFromURL(percentageResults) {
+  if (!testData) {
+    setTimeout(() => showResultFromURL(percentageResults), 100);
+    return;
+  }
+
+  // 비율을 바탕으로 결과 객체 생성
+  const results = Object.entries(percentageResults).map(
+    ([category, percentage]) => ({
+      category,
+      score: 0, // URL에서 온 경우 원점수는 의미없음
+      percentage: percentage,
+      personality: testData.personalityTypes[category],
+    })
+  );
+
+  // 비율 순으로 정렬
+  const sortedResults = results.sort((a, b) => b.percentage - a.percentage);
+
+  // 결과를 currentResults에 저장 (공유 기능을 위해)
+  currentResults = {};
+  sortedResults.forEach((result) => {
+    currentResults[result.category] = result.percentage;
+  });
+
+  // 결과 화면 표시
+  showScreen("result-screen");
+  renderResultRanking(sortedResults);
+  renderDetailCard(sortedResults[0]);
+}
 
 // 테스트 시작
 function startTest() {
-  startScreen.classList.remove("active");
-  questionScreen.classList.add("active");
+  if (!testData) {
+    alert("데이터를 로드하는 중입니다. 잠시 후 다시 시도해주세요.");
+    return;
+  }
+
   currentQuestion = 0;
-  answers = {};
+  answers = [];
+
+  // 질문 순서 랜덤화
+  shuffleQuestions();
+
+  showScreen("question-screen");
   showQuestion();
 }
 
-// 질문 표시
-function showQuestion() {
-  const question = shuffledQuestions[currentQuestion];
-  questionText.textContent = question.question;
-  currentQuestionSpan.textContent = currentQuestion + 1;
-
-  // 진행률 업데이트
-  const progress = ((currentQuestion + 1) / shuffledQuestions.length) * 100;
-  progressBar.style.width = progress + "%";
-
-  // 옵션 버튼 업데이트 (랜덤화된 옵션 사용)
-  optionBtns.forEach((btn, index) => {
-    if (question.shuffledOptions[index]) {
-      btn.textContent = question.shuffledOptions[index].text;
-      btn.dataset.category = question.shuffledOptions[index].category;
-    }
-    btn.classList.remove("selected");
-  });
-}
-
-// 답변 선택
-function selectAnswer(answerIndex) {
-  const question = shuffledQuestions[currentQuestion];
-  const category = question.shuffledOptions[answerIndex].category;
-
-  // 답변 저장
-  if (!answers[category]) {
-    answers[category] = 0;
+// 질문 순서 랜덤화
+function shuffleQuestions() {
+  for (let i = testData.questions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [testData.questions[i], testData.questions[j]] = [
+      testData.questions[j],
+      testData.questions[i],
+    ];
   }
-  answers[category]++;
-
-  // 선택된 버튼 하이라이트
-  optionBtns[answerIndex].classList.add("selected");
-  optionBtns[answerIndex].classList.add("pulse");
-
-  // 다음 질문으로 이동
-  setTimeout(() => {
-    currentQuestion++;
-    if (currentQuestion < shuffledQuestions.length) {
-      showQuestion();
-    } else {
-      showResult();
-    }
-  }, 500);
-}
-
-// 자연스러운 비율 계산
-function calculateNaturalPercentages(scores) {
-  const totalScore = Object.values(scores).reduce(
-    (sum, score) => sum + score,
-    0
-  );
-  const basePercentages = {};
-
-  // 기본 비율 계산
-  Object.entries(scores).forEach(([category, score]) => {
-    basePercentages[category] = Math.round((score / totalScore) * 100);
-  });
-
-  // 100%가 되도록 조정
-  let currentSum = Object.values(basePercentages).reduce(
-    (sum, percent) => sum + percent,
-    0
-  );
-
-  if (currentSum !== 100) {
-    const diff = 100 - currentSum;
-    const sortedEntries = Object.entries(basePercentages).sort(
-      ([, a], [, b]) => b - a
-    );
-
-    // 가장 높은 점수에 차이를 더하거나 빼기
-    const [highestCategory] = sortedEntries[0];
-    basePercentages[highestCategory] += diff;
-  }
-
-  // 자연스러운 변동 추가 (±2% 범위)
-  const adjustedPercentages = {};
-  const categories = Object.keys(basePercentages);
-  let remainingTotal = 100;
-
-  categories.forEach((category, index) => {
-    if (index === categories.length - 1) {
-      // 마지막 카테고리는 남은 비율로 설정
-      adjustedPercentages[category] = remainingTotal;
-    } else {
-      const basePercent = basePercentages[category];
-      const minAdjust = Math.max(1, basePercent - 2);
-      const maxAdjust = Math.min(
-        remainingTotal - (categories.length - index - 1),
-        basePercent + 2
-      );
-
-      const adjustedPercent =
-        Math.floor(Math.random() * (maxAdjust - minAdjust + 1)) + minAdjust;
-      adjustedPercentages[category] = adjustedPercent;
-      remainingTotal -= adjustedPercent;
-    }
-  });
-
-  return adjustedPercentages;
-}
-
-// 성향별 배경색 설정 (강화된 색상)
-const personalityColors = {
-  식비: "linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%)",
-  쇼핑: "linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%)",
-  "구독/디지털": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  "저축/계획": "linear-gradient(135deg, #ffa726 0%, #ff7043 100%)",
-  고정비: "linear-gradient(135deg, #ab47bc 0%, #8e24aa 100%)",
-  "즉흥/기타": "linear-gradient(135deg, #66bb6a 0%, #43a047 100%)",
-  "굿즈/취미/이벤트": "linear-gradient(135deg, #ef5350 0%, #e53935 100%)",
-};
-
-// 결과 표시
-function showResult() {
-  questionScreen.classList.remove("active");
-  resultScreen.classList.add("active");
-
-  // 답변 정렬 (점수 높은 순)
-  const sortedAnswers = Object.entries(answers)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 4); // 상위 4개만
-
-  // 자연스러운 비율 계산
-  const topAnswers = {};
-  sortedAnswers.forEach(([category, score]) => {
-    topAnswers[category] = score;
-  });
-  const naturalPercentages = calculateNaturalPercentages(topAnswers);
-
-  // 결과 차트 생성
-  resultChart.innerHTML = "";
-
-  // 순위 컨테이너 생성
-  const rankingContainer = document.createElement("div");
-  rankingContainer.className = "result-ranking";
-
-  // 상세 정보 컨테이너 생성
-  const detailContainer = document.createElement("div");
-  detailContainer.className = "detail-card";
-
-  // 공유 버튼 컨테이너 생성
-  const shareContainer = document.createElement("div");
-  shareContainer.className = "share-container";
-
-  // 파라미터 생성
-  const urlParams = new URLSearchParams();
-  Object.entries(answers).forEach(([category, score]) => {
-    urlParams.append(category, score);
-  });
-
-  const shareUrl = `${window.location.href}?${urlParams.toString()}`;
-
-  shareContainer.innerHTML = `
-        <div class="share-divider"></div>
-        <div class="share-buttons">
-            <button class="share-btn kakao-share" onclick="shareToKakao('${shareUrl}')">
-                <span class="share-icon">💬</span>
-                카카오톡 공유하기
-            </button>
-            <button class="share-btn link-share" onclick="copyLink('${shareUrl}')">
-                <span class="share-icon">🔗</span>
-                링크 복사하기
-            </button>
-        </div>
-    `;
-
-  sortedAnswers.forEach(([category, score], index) => {
-    const percentage = naturalPercentages[category];
-    const personality = personalityTypes[category];
-
-    // 순위 아이템 생성
-    const rankItem = document.createElement("div");
-    rankItem.className = `rank-item rank-${index + 1}`;
-    rankItem.dataset.category = category;
-
-    rankItem.innerHTML = `
-            <div class="rank-badge">${index + 1}</div>
-            <div class="rank-content">
-                <span class="rank-emoji">${personality.emoji}</span>
-                <div class="rank-info">
-                    <div class="rank-name">${personality.name}</div>
-                    <div class="rank-percentage">(${percentage}%)</div>
-                </div>
-            </div>
-        `;
-
-    // 클릭 이벤트 추가
-    rankItem.addEventListener("click", () => {
-      showPersonalityDetail(category, detailContainer, percentage);
-
-      // 활성화 상태 변경
-      document.querySelectorAll(".rank-item").forEach((item) => {
-        item.classList.remove("active");
-      });
-      rankItem.classList.add("active");
-    });
-
-    rankingContainer.appendChild(rankItem);
-  });
-
-  resultChart.appendChild(rankingContainer);
-  resultChart.appendChild(detailContainer);
-  resultChart.appendChild(shareContainer);
-
-  // 첫 번째 항목을 기본으로 표시
-  const firstCategory = sortedAnswers[0][0];
-  const firstPercentage = naturalPercentages[firstCategory];
-  showPersonalityDetail(firstCategory, detailContainer, firstPercentage);
-  document.querySelector(".rank-item").classList.add("active");
-}
-
-// 성향 상세 정보 표시
-function showPersonalityDetail(
-  category,
-  detailContainer = null,
-  percentage = null
-) {
-  const personality = personalityTypes[category];
-  const displayPercentage =
-    percentage ||
-    Math.round((answers[category] / shuffledQuestions.length) * 100);
-
-  const detailHTML = `
-        <div class="detail-header">
-            <span class="detail-emoji">${personality.emoji}</span>
-            <div class="detail-title">${personality.name}</div>
-            <div class="detail-category">${category}</div>
-            <div class="detail-percentage">${displayPercentage}%</div>
-        </div>
-        <div class="personality-description">${personality.description}</div>
-        <div class="funny-quote">
-            <span class="quote-icon">💬</span>
-            "${personality.quote}"
-        </div>
-    `;
-
-  if (detailContainer) {
-    // 성향별 배경색 적용
-    const backgroundColor =
-      personalityColors[category] ||
-      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
-    detailContainer.style.background = backgroundColor;
-
-    detailContainer.innerHTML = detailHTML;
-    detailContainer.style.animation = "none";
-    detailContainer.offsetHeight; // 리플로우 강제 실행
-    detailContainer.style.animation = "slideUp 0.5s ease-out";
-  }
-}
-
-// 카카오톡 공유 기능
-function shareToKakao(shareUrl) {
-  const topAnswers = Object.entries(answers)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 4);
-
-  const topPersonality = personalityTypes[topAnswers[0][0]];
-
-  const shareText = `💰 소비 성향 진단 결과!\n\n${topPersonality.emoji} 내 소비 성향: ${topPersonality.name}\n\n"${topPersonality.quote}"\n\n당신의 소비 성향도 궁금하다면? 👇`;
-
-  if (navigator.share) {
-    navigator.share({
-      title: "💰 소비 성향 진단 테스트",
-      text: shareText,
-      url: shareUrl,
-    });
-  } else {
-    // 카카오톡 공유 URL 생성
-    const kakaoUrl = `https://sharer.kakao.com/talk/friends/?url=${encodeURIComponent(
-      shareUrl
-    )}&text=${encodeURIComponent(shareText)}`;
-    window.open(kakaoUrl, "_blank");
-  }
-}
-
-// 링크 복사 기능
-function copyLink(url) {
-  navigator.clipboard
-    .writeText(url)
-    .then(() => {
-      alert("링크가 복사되었습니다! 📋");
-    })
-    .catch(() => {
-      // 복사 실패 시 수동으로 선택할 수 있도록
-      const textArea = document.createElement("textarea");
-      textArea.value = url;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-      alert("링크가 복사되었습니다! 📋");
-    });
 }
 
 // 성향 미리보기 표시
 function showPreview() {
-  startScreen.classList.remove("active");
-  previewScreen.classList.add("active");
-  createPersonalityGrid();
+  if (!testData) {
+    alert("데이터를 로드하는 중입니다. 잠시 후 다시 시도해주세요.");
+    return;
+  }
+
+  showScreen("preview-screen");
+  renderPersonalityGrid();
 }
 
-// 메인화면으로 돌아가기
-function backToMain() {
-  previewScreen.classList.remove("active");
-  startScreen.classList.add("active");
+// 시작 화면으로 돌아가기
+function showStartScreen() {
+  showScreen("start-screen");
+  // URL 파라미터 제거
+  window.history.replaceState({}, document.title, window.location.pathname);
 }
 
-// 성향 그리드 생성
-function createPersonalityGrid() {
-  personalityGrid.innerHTML = "";
+// 화면 전환
+function showScreen(screenId) {
+  document.querySelectorAll(".screen").forEach((screen) => {
+    screen.classList.remove("active");
+  });
+  document.getElementById(screenId).classList.add("active");
+}
 
-  // 그리드 컨테이너 생성
-  const gridContainer = document.createElement("div");
-  gridContainer.className = "personality-grid";
+// 성향 그리드 렌더링
+function renderPersonalityGrid() {
+  const grid = document.getElementById("personality-grid");
+  grid.innerHTML = "";
 
-  // 상세 정보 컨테이너 생성
-  const detailContainer = document.createElement("div");
-  detailContainer.className = "personality-preview-detail";
+  Object.entries(testData.personalityTypes).forEach(
+    ([category, personality]) => {
+      const card = document.createElement("div");
+      // 카테고리명을 CSS 클래스명으로 변환 (공백과 특수문자 제거)
+      const categoryClass = category.replace(/[^가-힣a-zA-Z0-9]/g, "");
+      card.className = `personality-preview-card ${categoryClass}`;
+      card.onclick = () => togglePersonalityDetail(category, card);
 
-  Object.entries(personalityTypes).forEach(([category, personality]) => {
-    const personalityCard = document.createElement("div");
-    personalityCard.className = "personality-preview-card";
-    personalityCard.style.background =
-      personalityColors[category] ||
-      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
-    personalityCard.dataset.category = category;
-
-    personalityCard.innerHTML = `
+      card.innerHTML = `
             <div class="preview-emoji">${personality.emoji}</div>
             <div class="preview-name">${personality.name}</div>
             <div class="preview-category">${category}</div>
         `;
 
-    // 클릭 이벤트 추가 (토글 방식 구현)
-    personalityCard.addEventListener("click", () => {
-      if (detailContainer.classList.contains("active")) {
-        detailContainer.classList.remove("active");
-      } else {
-        showPreviewDetail(category, detailContainer);
-        detailContainer.classList.add("active");
-      }
-    });
-
-    gridContainer.appendChild(personalityCard);
-  });
-
-  personalityGrid.appendChild(gridContainer);
-  personalityGrid.appendChild(detailContainer);
+      grid.appendChild(card);
+    }
+  );
 }
 
-// 성향 미리보기 상세 정보 표시
-function showPreviewDetail(category, detailContainer) {
-  const personality = personalityTypes[category];
+// 성향 상세 정보 토글
+function togglePersonalityDetail(category, cardElement) {
+  const detailContainer = document.getElementById("personality-detail");
+  const personality = testData.personalityTypes[category];
 
-  const detailHTML = `
+  // 모든 카드의 active 클래스 제거
+  document.querySelectorAll(".personality-preview-card").forEach((card) => {
+    card.classList.remove("active");
+  });
+
+  // 현재 카드가 이미 활성화되어 있다면 토글 (닫기)
+  if (
+    detailContainer.classList.contains("active") &&
+    detailContainer.dataset.currentCategory === category
+  ) {
+    detailContainer.classList.remove("active");
+    detailContainer.dataset.currentCategory = "";
+    return;
+  }
+
+  // 새로운 카드 활성화
+  cardElement.classList.add("active");
+  detailContainer.dataset.currentCategory = category;
+
+  detailContainer.innerHTML = `
         <div class="preview-detail-header">
             <div class="preview-detail-emoji">${personality.emoji}</div>
             <div class="preview-detail-info">
@@ -440,25 +203,369 @@ function showPreviewDetail(category, detailContainer) {
                 <div class="preview-detail-category">${category}</div>
             </div>
         </div>
-        <div class="preview-detail-description">${personality.description}</div>
-        <div class="preview-detail-quote">"${personality.quote}"</div>
+        <div class="preview-detail-description">
+            ${personality.description}
+        </div>
+        <div class="preview-detail-quote">
+            ${personality.quote}
+        </div>
     `;
 
-  detailContainer.innerHTML = detailHTML;
-  detailContainer.style.animation = "slideUp 0.5s ease-out";
+  detailContainer.classList.add("active");
 }
 
-// 테스트 재시작
+// 질문 표시
+function showQuestion() {
+  const question = testData.questions[currentQuestion];
+  const progress = ((currentQuestion + 1) / testData.questions.length) * 100;
+
+  document.getElementById("progress-fill").style.width = progress + "%";
+  document.getElementById("question-number").textContent = `질문 ${
+    currentQuestion + 1
+  }/${testData.questions.length}`;
+  document.getElementById("question-text").textContent = question.question;
+
+  const optionsContainer = document.getElementById("options-container");
+  optionsContainer.innerHTML = "";
+
+  // 답변 순서 랜덤화를 위한 인덱스 배열 생성
+  const optionIndices = Array.from(
+    { length: question.options.length },
+    (_, i) => i
+  );
+  shuffleArray(optionIndices);
+
+  // 랜덤화된 순서로 답변 표시
+  optionIndices.forEach((originalIndex, displayIndex) => {
+    const button = document.createElement("button");
+    button.className = "option-btn";
+    button.textContent = question.options[originalIndex];
+    button.onclick = () => selectOption(originalIndex); // 원래 인덱스로 답변 저장
+    optionsContainer.appendChild(button);
+  });
+}
+
+// 배열 랜덤 섞기 유틸리티 함수
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// 선택지 선택
+function selectOption(optionIndex) {
+  const buttons = document.querySelectorAll(".option-btn");
+
+  // 모든 버튼의 색상 초기화
+  buttons.forEach((btn) => {
+    btn.classList.remove("selected"); // 기존 선택된 스타일 제거
+  });
+
+  // 클릭한 버튼에 스타일 추가
+  buttons[optionIndex].classList.add("selected"); // 현재 선택된 버튼에 스타일 적용
+
+  // 선택한 옵션에 대한 추가 로직 (예: 답변 저장 등) 추가
+  answers[currentQuestion] = optionIndex;
+
+  // 다음 질문으로 넘어가는 로직
+  currentQuestion++;
+  if (currentQuestion < testData.questions.length) {
+    showQuestion();
+  } else {
+    showResult();
+  }
+}
+// 결과 계산
+function calculateResult() {
+  const categoryScores = {};
+
+  // 모든 카테고리 초기화
+  Object.keys(testData.personalityTypes).forEach((category) => {
+    categoryScores[category] = 0;
+  });
+
+  // 답변에 따른 점수 계산
+  answers.forEach((answerIndex, questionIndex) => {
+    const question = testData.questions[questionIndex];
+    const category = question.categories[answerIndex];
+    categoryScores[category]++;
+  });
+
+  showResult(categoryScores);
+}
+
+// 결과 표시
+function showResult(categoryScores) {
+  currentResults = categoryScores;
+  showScreen("result-screen");
+
+  // 총 점수 계산
+  const totalScore = Object.values(categoryScores).reduce(
+    (sum, score) => sum + score,
+    0
+  );
+
+  // 모든 결과에 대해 비율을 먼저 계산하고 조정
+  const results = Object.entries(categoryScores).map(([category, score]) => {
+    // 기본 비율 계산
+    let basePercentage = totalScore > 0 ? (score / totalScore) * 100 : 0;
+
+    // 미묘한 조정 (모든 항목에 대해 동일한 로직 적용)
+    let adjustedPercentage = basePercentage;
+    if (basePercentage > 0) {
+      // -1~+1% 범위에서 조정
+      adjustedPercentage += (Math.random() - 0.5) * 2;
+    }
+
+    // 최소 1%, 최대 75% 제한
+    adjustedPercentage = Math.max(1, Math.min(75, adjustedPercentage));
+
+    return {
+      category,
+      score,
+      percentage: Math.round(adjustedPercentage),
+      personality: testData.personalityTypes[category],
+    };
+  });
+
+  // 전체 비율이 100%에 가깝게 미세 조정
+  const totalPercentage = results.reduce(
+    (sum, result) => sum + result.percentage,
+    0
+  );
+  const difference = 100 - totalPercentage;
+  if (Math.abs(difference) <= 5 && results.length > 0) {
+    // 가장 높은 점수를 가진 항목에 차이만큼 조정
+    const maxScoreResult = results.reduce((max, current) =>
+      current.score > max.score ? current : max
+    );
+    maxScoreResult.percentage += difference;
+    // 음수가 되지 않도록 보정
+    if (maxScoreResult.percentage < 1) {
+      maxScoreResult.percentage = 1;
+    }
+  }
+
+  // 비율 조정 후 다시 순위별로 정렬
+  const sortedResults = results.sort((a, b) => b.percentage - a.percentage);
+
+  // 순위 표시
+  renderResultRanking(sortedResults);
+
+  // 최고 점수 성향의 상세 정보 표시
+  renderDetailCard(sortedResults[0]);
+}
+
+// 결과 순위 렌더링
+function renderResultRanking(sortedResults) {
+  const rankingContainer = document.getElementById("result-ranking");
+  rankingContainer.innerHTML = "";
+
+  // 상위 4개만 표시
+  const topResults = sortedResults.slice(0, 4);
+
+  topResults.forEach((result, index) => {
+    const rankItem = document.createElement("div");
+    rankItem.className = `rank-item rank-${index + 1} clickable`;
+    rankItem.onclick = () => selectRankItem(result, rankItem, index);
+
+    rankItem.innerHTML = `
+            <div class="rank-badge">${index + 1}</div>
+            <div class="rank-content">
+                <div class="rank-emoji">${result.personality.emoji}</div>
+                <div class="rank-info">
+                    <div class="rank-name">${result.personality.name}</div>
+                    <div class="rank-percentage">${result.percentage}%</div>
+                </div>
+            </div>
+        `;
+
+    rankingContainer.appendChild(rankItem);
+  });
+
+  // 첫 번째 항목을 기본으로 선택
+  if (topResults.length > 0) {
+    const firstItem = rankingContainer.firstElementChild;
+    firstItem.classList.add("active");
+  }
+}
+
+// 랭킹 아이템 선택
+function selectRankItem(result, rankItemElement, index) {
+  // 모든 랭킹 아이템의 active 클래스 제거
+  document.querySelectorAll(".rank-item").forEach((item) => {
+    item.classList.remove("active");
+  });
+
+  // 선택된 아이템에 active 클래스 추가
+  rankItemElement.classList.add("active");
+
+  // 해당 결과의 상세 정보 표시
+  renderDetailCard(result);
+}
+
+// 상세 카드 렌더링
+function renderDetailCard(topResult) {
+  const detailCard = document.getElementById("detail-card");
+
+  // 카테고리별 클래스명 생성
+  const categoryClass = topResult.category.replace(/[^가-힣a-zA-Z0-9]/g, "");
+  detailCard.className = `detail-card ${categoryClass}`;
+
+  detailCard.innerHTML = `
+        <div class="detail-header">
+            <div class="detail-emoji">${topResult.personality.emoji}</div>
+            <div class="detail-title">${topResult.personality.name}</div>
+            <div class="detail-category">${topResult.category}</div>
+            <div class="detail-percentage">${topResult.percentage}%</div>
+        </div>
+        <div class="personality-description">
+            ${topResult.personality.description}
+        </div>
+        <div class="funny-quote">
+            <span class="quote-icon">💬</span>
+            ${topResult.personality.quote}
+        </div>
+    `;
+}
+
+// 카카오톡 공유
+function shareKakao() {
+  if (!currentResults) {
+    alert("공유할 결과가 없습니다.");
+    return;
+  }
+
+  if (typeof Kakao === "undefined" || !Kakao.isInitialized()) {
+    alert(
+      "카카오톡 공유 기능을 사용할 수 없습니다. 잠시 후 다시 시도해주세요."
+    );
+    return;
+  }
+
+  // 1위 결과 찾기 (현재 활성화된 카드에서)
+  const activeRankItem = document.querySelector(".rank-item.active");
+  const topPersonalityName =
+    activeRankItem.querySelector(".rank-name").textContent;
+  const topPercentage =
+    activeRankItem.querySelector(".rank-percentage").textContent;
+
+  // 성향 정보 찾기
+  let topPersonality = null;
+  for (const personality of Object.values(testData.personalityTypes)) {
+    if (personality.name === topPersonalityName) {
+      topPersonality = personality;
+      break;
+    }
+  }
+
+  const shareURL = generateShareURL();
+
+  Kakao.Share.sendDefault({
+    objectType: "feed",
+    content: {
+      title: "💰 소비 성향 테스트 결과",
+      description: `나의 소비 성향은 "${topPersonalityName}"! (${topPercentage})\n${topPersonality.quote}`,
+      imageUrl: "https://your-domain.com/og-image.png", // 실제 이미지 URL로 교체
+      link: {
+        mobileWebUrl: shareURL,
+        webUrl: shareURL,
+      },
+    },
+    buttons: [
+      {
+        title: "나도 테스트하기",
+        link: {
+          mobileWebUrl: shareURL,
+          webUrl: shareURL,
+        },
+      },
+    ],
+  });
+}
+
+// 링크 복사
+function shareLink() {
+  if (!currentResults) {
+    alert("공유할 결과가 없습니다.");
+    return;
+  }
+
+  const shareURL = generateShareURL();
+
+  navigator.clipboard
+    .writeText(shareURL)
+    .then(() => {
+      alert("링크가 클립보드에 복사되었습니다!");
+    })
+    .catch(() => {
+      // 클립보드 API가 지원되지 않는 경우 폴백
+      const textArea = document.createElement("textarea");
+      textArea.value = shareURL;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      alert("링크가 복사되었습니다!");
+    });
+}
+
+// 공유 URL 생성
+function generateShareURL() {
+  if (!currentResults) return window.location.origin + window.location.pathname;
+
+  const params = new URLSearchParams();
+
+  // 카테고리를 영문으로 매핑
+  const categoryMapping = {
+    식비: "food",
+    쇼핑: "shopping",
+    "구독/디지털": "subscription",
+    "저축/계획": "saving",
+    고정비: "fixed",
+    "즉흥/기타": "impulse",
+    "굿즈/취미/이벤트": "goods",
+  };
+
+  // 현재 화면에 표시된 비율을 가져오기
+  const rankItems = document.querySelectorAll(".rank-item");
+  rankItems.forEach((item) => {
+    const categoryText = item.querySelector(".rank-name").textContent;
+    const percentageText = item.querySelector(".rank-percentage").textContent;
+    const percentage = parseInt(percentageText.replace("%", ""));
+
+    // 성향 이름으로 카테고리 찾기
+    for (const [category, personality] of Object.entries(
+      testData.personalityTypes
+    )) {
+      if (personality.name === categoryText) {
+        const key = categoryMapping[category];
+        if (key) {
+          params.append(key, percentage.toString());
+        }
+        break;
+      }
+    }
+  });
+
+  return (
+    window.location.origin + window.location.pathname + "?" + params.toString()
+  );
+}
+
+// 테스트 다시 하기
 function restartTest() {
-  resultScreen.classList.remove("active");
-  startScreen.classList.add("active");
   currentQuestion = 0;
-  answers = {};
-  progressBar.style.width = "0%";
-}
+  answers = [];
+  currentResults = null;
 
-// 초기화
-document.addEventListener("DOMContentLoaded", async () => {
-  await loadData();
-  startScreen.classList.add("active");
-});
+  // URL 파라미터 제거
+  window.history.replaceState({}, document.title, window.location.pathname);
+
+  // 테스트 데이터 다시 로드해서 원본 순서로 복원 후 재시작
+  loadTestData().then(() => {
+    showScreen("start-screen");
+  });
+}
