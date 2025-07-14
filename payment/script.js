@@ -256,10 +256,18 @@ function shuffleArray(array) {
 
 // 선택지 선택
 function selectOption(optionIndex) {
-  const buttons = document.querySelectorAll(".option-btn");
+  const optionsContainer = document.getElementById("options-container");
+
+  // 현재 질문의 버튼들만 대상으로 함
+  const buttons = optionsContainer.querySelectorAll(".option-btn");
+
+  // 모든 버튼의 selected 클래스 제거
   buttons.forEach((btn) => btn.classList.remove("selected"));
+
+  // 클릭된 버튼에만 selected 클래스 추가
   buttons[optionIndex].classList.add("selected");
 
+  // 정답 저장 및 다음 질문으로 이동
   setTimeout(() => {
     answers.push(optionIndex);
     currentQuestion++;
