@@ -1,6 +1,14 @@
 [
   {
     "id": 1,
+    "title": "[BBAL-RANG] 공룡 게임",
+    "description": "🦕 누가 더 잘달리나",
+    "url": "https://bbalrang.com/dino",
+    "image": "img/dino.png",
+    "category": "게임"
+  },
+  {
+    "id": 2,
     "title": "[BBAL-RANG] 소비 성향",
     "description": "💰내 돈, 여기서 다 나간다.",
     "url": "https://bbalrang.com/consumption",
